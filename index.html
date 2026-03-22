@@ -52,6 +52,20 @@
             font-weight: bold;
         }
 
+        .achievements-display {
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            color: #333;
+            max-width: 400px;
+        }
+
+        .achievements-display span {
+            color: #667eea;
+        }
+
         #gameCanvas {
             background: #2c3e50;
             border: 4px solid #34495e;
@@ -160,18 +174,26 @@
         /* 移动端控制按钮 */
         .mobile-controls {
             display: none;
-            grid-template-columns: repeat(3, 60px);
-            grid-template-rows: repeat(3, 60px);
-            gap: 5px;
+            grid-template-columns: repeat(3, 70px);
+            grid-template-rows: repeat(3, 70px);
+            gap: 8px;
             margin-top: 20px;
         }
 
         .mobile-controls button {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            font-size: 1.5em;
+            font-size: 1.8em;
             padding: 0;
-            border-radius: 10px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mobile-controls button:active {
+            transform: scale(0.9);
+            background: linear-gradient(135deg, #764ba2, #667eea);
         }
 
         .mobile-controls .btn-up { grid-column: 2; grid-row: 1; }
@@ -179,33 +201,85 @@
         .mobile-controls .btn-down { grid-column: 2; grid-row: 2; }
         .mobile-controls .btn-right { grid-column: 3; grid-row: 2; }
 
+        /* 触控区域提示 */
+        .swipe-hint {
+            display: none;
+            text-align: center;
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 15px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
         @media (max-width: 600px) {
             .mobile-controls {
                 display: grid;
             }
 
+            .swipe-hint {
+                display: block;
+            }
+
             #gameCanvas {
-                width: 300px;
-                height: 300px;
+                width: 100%;
+                max-width: 350px;
+                height: auto;
+                touch-action: none;
             }
 
             .container {
-                padding: 20px;
+                padding: 15px;
+                max-width: 100%;
             }
 
             h1 {
-                font-size: 1.5em;
+                font-size: 1.4em;
+            }
+
+            .score-board {
+                gap: 15px;
+                flex-wrap: wrap;
+            }
+
+            .score-item {
+                padding: 8px 15px;
+                font-size: 0.95em;
+            }
+
+            .controls button {
+                padding: 10px 25px;
+                font-size: 0.9em;
+            }
+
+            .instructions {
+                font-size: 0.8em;
+                padding: 12px;
+            }
+
+            .achievements-display {
+                font-size: 0.8em;
+                padding: 8px 12px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🐍 贪吃蛇小游戏 <small style="font-size: 0.4em; color: #999;">v1.1</small></h1>
+        <h1>🐍 贪吃蛇小游戏 <small style="font-size: 0.4em; color: #999;">v2.0</small></h1>
 
         <div class="score-board">
             <div class="score-item">当前分数: <span id="currentScore">0</span></div>
             <div class="score-item">最高分数: <span id="highScore">0</span></div>
+        </div>
+
+        <div class="achievements-display">
+            <strong>🏆 成就: </strong>
+            <span id="achievementsList">暂无</span>
         </div>
 
         <canvas id="gameCanvas" width="400" height="400"></canvas>
@@ -222,11 +296,15 @@
             <button class="btn-right" onclick="changeDirection('right')">→</button>
         </div>
 
+        <div class="swipe-hint">
+            💡 提示：也可以在游戏区域滑动手指控制方向
+        </div>
+
         <div class="instructions">
             <h3>🎮 操作说明</h3>
-            <p>使用 <strong>方向键</strong> 或 <strong>WASD</strong> 控制蛇的移动</p>
+            <p>PC端：使用 <strong>方向键</strong> 或 <strong>WASD</strong> 控制</p>
+            <p>移动端：使用 <strong>方向按钮</strong> 或 <strong>滑动屏幕</strong> 控制</p>
             <p>吃掉红色食物得分，避免撞墙和撞到自己</p>
-            <p>移动端可使用屏幕按钮控制</p>
         </div>
     </div>
 
@@ -247,7 +325,7 @@
 
         // 游戏状态
         let snake = [{x: 10, y: 10}];
-        let food = {x: 15, y: 15};
+        let food = {x: 15, y: 15, type: 'normal'};
         let direction = {x: 0, y: 0};
         let nextDirection = {x: 0, y: 0};
         let score = 0;
@@ -257,14 +335,234 @@
         let isPaused = false;
         let isGameRunning = false;
 
+        // 新增趣味功能
+        let particles = [];
+        let combo = 0;
+        let comboTimer = null;
+        let comboMultiplier = 1;
+        let isInvincible = false;
+        let invincibleTimer = null;
+        let achievements = JSON.parse(localStorage.getItem('snakeAchievements') || '{}');
+        let lastEatTime = 0;
+
         // 更新最高分数显示
         document.getElementById('highScore').textContent = highScore;
+
+        // 显示已解锁成就
+        function displayAchievements() {
+            const achievementsList = document.getElementById('achievementsList');
+            const achievementNames = {
+                'firstGold': '首次吃到黄金食物',
+                'firstSlow': '首次吃到减速食物',
+                'firstInvincible': '首次吃到无敌食物',
+                'score100': '达到100分',
+                'score500': '达到500分',
+                'score1000': '达到1000分',
+                'combo5': '5连击',
+                'newHighScore': '刷新最高分'
+            };
+
+            const unlocked = Object.keys(achievements)
+                .filter(key => achievements[key])
+                .map(key => achievementNames[key] || key);
+
+            if (unlocked.length > 0) {
+                achievementsList.textContent = unlocked.join(', ');
+            } else {
+                achievementsList.textContent = '暂无';
+            }
+        }
+        displayAchievements();
+
+        // 音效系统
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            switch(type) {
+                case 'eat':
+                    oscillator.frequency.value = 600;
+                    oscillator.type = 'sine';
+                    gainNode.gain.value = 0.1;
+                    oscillator.start();
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                    break;
+                case 'gold':
+                    oscillator.frequency.value = 800;
+                    oscillator.type = 'sine';
+                    gainNode.gain.value = 0.15;
+                    oscillator.start();
+                    oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    oscillator.stop(audioCtx.currentTime + 0.2);
+                    break;
+                case 'combo':
+                    oscillator.frequency.value = 400;
+                    oscillator.type = 'triangle';
+                    gainNode.gain.value = 0.12;
+                    oscillator.start();
+                    oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.15);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    oscillator.stop(audioCtx.currentTime + 0.15);
+                    break;
+                case 'die':
+                    oscillator.frequency.value = 300;
+                    oscillator.type = 'sawtooth';
+                    gainNode.gain.value = 0.2;
+                    oscillator.start();
+                    oscillator.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                    oscillator.stop(audioCtx.currentTime + 0.5);
+                    break;
+                case 'invincible':
+                    oscillator.frequency.value = 500;
+                    oscillator.type = 'sine';
+                    gainNode.gain.value = 0.1;
+                    oscillator.start();
+                    for(let i = 0; i < 5; i++) {
+                        oscillator.frequency.value = 500 + i * 100;
+                    }
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    oscillator.stop(audioCtx.currentTime + 0.3);
+                    break;
+            }
+        }
+
+        // 粒子效果
+        function createParticles(x, y, color, count = 10) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x * gridSize + gridSize / 2,
+                    y: y * gridSize + gridSize / 2,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    life: 30,
+                    color: color,
+                    size: Math.random() * 4 + 2
+                });
+            }
+        }
+
+        function updateParticles() {
+            particles = particles.filter(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vx *= 0.95;
+                p.vy *= 0.95;
+                p.life--;
+                p.size *= 0.95;
+                return p.life > 0;
+            });
+        }
+
+        function drawParticles() {
+            particles.forEach(p => {
+                ctx.globalAlpha = p.life / 30;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        // 连击系统
+        function updateCombo() {
+            const now = Date.now();
+            if (now - lastEatTime < 1500) { // 1.5秒内吃到
+                combo++;
+                comboMultiplier = Math.min(combo, 5); // 最高5倍
+                if (combo >= 3) {
+                    playSound('combo');
+                }
+            } else {
+                combo = 0;
+                comboMultiplier = 1;
+            }
+            lastEatTime = now;
+        }
+
+        // 生成食物
+        function generateFood() {
+            const rand = Math.random();
+            let type = 'normal';
+
+            if (rand < 0.05) type = 'invincible'; // 5% 无敌食物
+            else if (rand < 0.15) type = 'gold'; // 10% 黄金食物
+            else if (rand < 0.25) type = 'slow'; // 10% 减速食物
+
+            do {
+                food = {
+                    x: Math.floor(Math.random() * tileCount),
+                    y: Math.floor(Math.random() * tileCount),
+                    type: type
+                };
+            } while (snake.some(segment => segment.x === food.x && segment.y === food.y));
+        }
+
+        // 成就检查
+        function checkAchievement(key, name, condition) {
+            if (!achievements[key] && condition()) {
+                achievements[key] = true;
+                localStorage.setItem('snakeAchievements', JSON.stringify(achievements));
+                showAchievementNotification(name);
+            }
+        }
+
+        function showAchievementNotification(name) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                font-weight: bold;
+                animation: slideIn 0.5s ease-out;
+                z-index: 10000;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            `;
+            notification.innerHTML = `🏆 成就解锁: ${name}`;
+            document.body.appendChild(notification);
+
+            // 更新成就列表显示
+            displayAchievements();
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.5s ease-out';
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
+        }
+
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(400px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(400px); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
 
         // 绘制游戏
         function draw() {
             // 清空画布
             ctx.fillStyle = '#2c3e50';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制粒子
+            drawParticles();
 
             // 绘制蛇
             snake.forEach((segment, index) => {
@@ -276,8 +574,16 @@
                     segment.y * gridSize + gridSize / 2,
                     gridSize / 2
                 );
-                gradient.addColorStop(0, '#38ef7d');
-                gradient.addColorStop(1, '#11998e');
+
+                // 无敌状态蛇会发光
+                if (isInvincible && index % 2 === Math.floor(Date.now() / 100) % 2) {
+                    gradient.addColorStop(0, '#f1c40f');
+                    gradient.addColorStop(1, '#f39c12');
+                } else {
+                    gradient.addColorStop(0, '#38ef7d');
+                    gradient.addColorStop(1, '#11998e');
+                }
+
                 ctx.fillStyle = gradient;
                 ctx.fillRect(
                     segment.x * gridSize + 1,
@@ -296,29 +602,104 @@
                 }
             });
 
-            // 绘制食物
-            ctx.fillStyle = '#e74c3c';
-            ctx.beginPath();
-            ctx.arc(
-                food.x * gridSize + gridSize / 2,
-                food.y * gridSize + gridSize / 2,
-                gridSize / 2 - 2,
-                0,
-                Math.PI * 2
-            );
-            ctx.fill();
+            // 绘制食物（根据类型）
+            const centerX = food.x * gridSize + gridSize / 2;
+            const centerY = food.y * gridSize + gridSize / 2;
 
-            // 食物光泽
-            ctx.fillStyle = '#c0392b';
+            if (food.type === 'normal') {
+                // 普通食物 - 红色圆形
+                ctx.fillStyle = '#e74c3c';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, gridSize / 2 - 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#c0392b';
+                ctx.beginPath();
+                ctx.arc(centerX - 3, centerY - 3, 3, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (food.type === 'gold') {
+                // 黄金食物 - 金色星形
+                ctx.fillStyle = '#f1c40f';
+                drawStar(centerX, centerY, 5, gridSize / 2 - 2, gridSize / 4);
+                ctx.fill();
+
+                // 发光效果
+                ctx.shadowColor = '#f1c40f';
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            } else if (food.type === 'slow') {
+                // 减速食物 - 蓝色雪花
+                ctx.fillStyle = '#3498db';
+                drawSnowflake(centerX, centerY, gridSize / 2 - 2);
+                ctx.fill();
+            } else if (food.type === 'invincible') {
+                // 无敌食物 - 紫色盾牌
+                ctx.fillStyle = '#9b59b6';
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY - gridSize / 2 + 2);
+                ctx.lineTo(centerX + gridSize / 2 - 2, centerY);
+                ctx.lineTo(centerX + gridSize / 3, centerY + gridSize / 2 - 2);
+                ctx.lineTo(centerX - gridSize / 3, centerY + gridSize / 2 - 2);
+                ctx.lineTo(centerX - gridSize / 2 + 2, centerY);
+                ctx.closePath();
+                ctx.fill();
+
+                // 发光效果
+                ctx.shadowColor = '#9b59b6';
+                ctx.shadowBlur = 15;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            // 绘制连击信息
+            if (combo >= 2) {
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`🔥 ${combo}连击 x${comboMultiplier}`, canvas.width / 2, 25);
+            }
+
+            // 绘制无敌状态提示
+            if (isInvincible) {
+                ctx.fillStyle = '#f1c40f';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`🛡️ 无敌状态`, canvas.width / 2, canvas.height - 10);
+            }
+        }
+
+        function drawStar(cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            let step = Math.PI / spikes;
+
             ctx.beginPath();
-            ctx.arc(
-                food.x * gridSize + gridSize / 2 - 3,
-                food.y * gridSize + gridSize / 2 - 3,
-                3,
-                0,
-                Math.PI * 2
-            );
-            ctx.fill();
+            ctx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+        }
+
+        function drawSnowflake(cx, cy, radius) {
+            for (let i = 0; i < 6; i++) {
+                const angle = (i * Math.PI) / 3;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius);
+                ctx.stroke();
+            }
         }
 
         // 更新游戏状态
@@ -327,31 +708,84 @@
 
             direction = {...nextDirection};
 
+            // 更新粒子
+            updateParticles();
+
             // 计算新蛇头位置
             const head = {
                 x: snake[0].x + direction.x,
                 y: snake[0].y + direction.y
             };
 
-            // 检查碰撞
-            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
-                gameOver();
-                return;
-            }
-
-            for (let i = 0; i < snake.length; i++) {
-                if (head.x === snake[i].x && head.y === snake[i].y) {
+            // 检查碰撞（无敌状态可以穿墙穿自己）
+            if (!isInvincible) {
+                if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
                     gameOver();
                     return;
                 }
+
+                for (let i = 0; i < snake.length; i++) {
+                    if (head.x === snake[i].x && head.y === snake[i].y) {
+                        gameOver();
+                        return;
+                    }
+                }
+            } else {
+                // 无敌状态下穿墙从另一边出来
+                if (head.x < 0) head.x = tileCount - 1;
+                if (head.x >= tileCount) head.x = 0;
+                if (head.y < 0) head.y = tileCount - 1;
+                if (head.y >= tileCount) head.y = 0;
             }
 
             snake.unshift(head);
 
             // 检查是否吃到食物
             if (head.x === food.x && head.y === food.y) {
-                score += 10;
+                // 更新连击
+                updateCombo();
+
+                // 根据食物类型计算得分
+                let points = 10 * comboMultiplier;
+                let particleColor = '#e74c3c';
+
+                if (food.type === 'gold') {
+                    points = 50 * comboMultiplier;
+                    particleColor = '#f1c40f';
+                    playSound('gold');
+                    checkAchievement('firstGold', '首次吃到黄金食物', () => true);
+                } else if (food.type === 'slow') {
+                    points = 10 * comboMultiplier;
+                    particleColor = '#3498db';
+                    gameSpeed = Math.max(gameSpeed + 30, 150); // 减速
+                    clearInterval(gameLoop);
+                    gameLoop = setInterval(gameUpdate, gameSpeed);
+                    playSound('eat');
+                    checkAchievement('firstSlow', '首次吃到减速食物', () => true);
+                } else if (food.type === 'invincible') {
+                    points = 20 * comboMultiplier;
+                    particleColor = '#9b59b6';
+                    isInvincible = true;
+                    playSound('invincible');
+                    checkAchievement('firstInvincible', '首次吃到无敌食物', () => true);
+
+                    // 清除旧计时器
+                    if (invincibleTimer) clearTimeout(invincibleTimer);
+                    // 5秒无敌
+                    invincibleTimer = setTimeout(() => {
+                        isInvincible = false;
+                    }, 5000);
+                } else {
+                    playSound('eat');
+                }
+
+                score += Math.floor(points);
                 document.getElementById('currentScore').textContent = score;
+
+                // 创建粒子效果
+                createParticles(food.x, food.y, particleColor);
+
+                // 生成新食物
                 generateFood();
 
                 // 增加难度
@@ -360,6 +794,12 @@
                     clearInterval(gameLoop);
                     gameLoop = setInterval(gameUpdate, gameSpeed);
                 }
+
+                // 检查成就
+                checkAchievement('score100', '达到100分', () => score >= 100);
+                checkAchievement('score500', '达到500分', () => score >= 500);
+                checkAchievement('score1000', '达到1000分', () => score >= 1000);
+                checkAchievement('combo5', '5连击', () => combo >= 5);
             } else {
                 snake.pop();
             }
@@ -390,13 +830,22 @@
                 return;
             }
 
+            // 重置所有状态
             snake = [{x: 10, y: 10}];
             direction = {x: 1, y: 0};
             nextDirection = {x: 1, y: 0};
             score = 0;
-            gameSpeed = 100;
+            gameSpeed = 150;
             isPaused = false;
             isGameRunning = true;
+            particles = [];
+            combo = 0;
+            comboMultiplier = 1;
+            lastEatTime = 0;
+            isInvincible = false;
+
+            if (invincibleTimer) clearTimeout(invincibleTimer);
+            if (comboTimer) clearTimeout(comboTimer);
 
             document.getElementById('currentScore').textContent = score;
             generateFood();
@@ -415,15 +864,22 @@
         function gameOver() {
             isGameRunning = false;
             clearInterval(gameLoop);
+            playSound('die');
 
             if (score > highScore) {
                 highScore = score;
                 localStorage.setItem('snakeHighScore', highScore);
                 document.getElementById('highScore').textContent = highScore;
+                checkAchievement('newHighScore', '刷新最高分', () => true);
             }
 
             document.getElementById('finalScore').textContent = score;
             document.getElementById('gameOver').style.display = 'flex';
+
+            // 创建死亡粒子效果
+            snake.forEach(segment => {
+                createParticles(segment.x, segment.y, '#e74c3c', 5);
+            });
         }
 
         // 重新开始游戏
@@ -483,6 +939,74 @@
                     break;
             }
         });
+
+        // 触控滑动控制
+        let touchStartX = 0;
+        let touchStartY = 0;
+        const minSwipeDistance = 30; // 最小滑动距离
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // 防止滚动
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            const touch = e.changedTouches[0];
+            const touchEndX = touch.clientX;
+            const touchEndY = touch.clientY;
+
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+
+            // 判断滑动方向
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // 水平滑动
+                if (Math.abs(deltaX) > minSwipeDistance) {
+                    if (deltaX > 0) {
+                        changeDirection('right');
+                    } else {
+                        changeDirection('left');
+                    }
+                }
+            } else {
+                // 垂直滑动
+                if (Math.abs(deltaY) > minSwipeDistance) {
+                    if (deltaY > 0) {
+                        changeDirection('down');
+                    } else {
+                        changeDirection('up');
+                    }
+                }
+            }
+        }, { passive: false });
+
+        // 添加触控反馈（振动）
+        function hapticFeedback() {
+            if (navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+        }
+
+        // 覆盖 changeDirection 函数添加触控反馈
+        const originalChangeDirection = changeDirection;
+        changeDirection = function(dir) {
+            originalChangeDirection(dir);
+            if (isGameRunning && !isPaused) {
+                hapticFeedback();
+            }
+        };
+
+        // 防止双击缩放
+        document.addEventListener('dblclick', (e) => {
+            e.preventDefault();
+        }, { passive: false });
 
         // 初始绘制
         draw();
