@@ -20,20 +20,73 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* 横屏提示 */
+        .rotate-prompt {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .rotate-prompt .icon {
+            font-size: 80px;
+            animation: rotate-phone 2s infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes rotate-phone {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(90deg); }
+            50% { transform: rotate(90deg); }
+            75% { transform: rotate(0deg); }
+        }
+
+        /* 横屏布局 */
+        .game-layout {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .game-section {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .joystick-section {
+            width: 250px;
+            flex-shrink: 0;
         }
 
         .container {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
-            padding: 30px;
+            padding: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             text-align: center;
+            height: 100%;
         }
 
         h1 {
             color: #333;
-            margin-bottom: 20px;
-            font-size: 2em;
+            margin-bottom: 15px;
+            font-size: 1.5em;
         }
 
         .score-board {
@@ -171,140 +224,165 @@
             margin-bottom: 20px;
         }
 
-        /* 移动端控制按钮 */
-        .mobile-controls {
-            display: none;
-            grid-template-columns: repeat(3, 70px);
-            grid-template-rows: repeat(3, 70px);
-            gap: 8px;
-            margin-top: 20px;
+        /* 虚拟摇杆 */
+        .joystick-container {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            position: relative;
         }
 
-        .mobile-controls button {
+        .joystick-base {
+            width: 200px;
+            height: 200px;
             background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            font-size: 1.8em;
-            padding: 0;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            transition: transform 0.1s;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5),
+                        inset 0 5px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .joystick-stick {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #fff, #f0f0f0);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3),
+                        inset 0 2px 5px rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: box-shadow 0.2s;
             -webkit-tap-highlight-color: transparent;
+            touch-action: none;
         }
 
-        .mobile-controls button:active {
-            transform: scale(0.9);
-            background: linear-gradient(135deg, #764ba2, #667eea);
+        .joystick-stick:active {
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.4),
+                        inset 0 2px 5px rgba(255, 255, 255, 0.5);
         }
 
-        .mobile-controls .btn-up { grid-column: 2; grid-row: 1; }
-        .mobile-controls .btn-left { grid-column: 1; grid-row: 2; }
-        .mobile-controls .btn-down { grid-column: 2; grid-row: 2; }
-        .mobile-controls .btn-right { grid-column: 3; grid-row: 2; }
+        .joystick-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 4px;
+            height: 4px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 50%;
+        }
 
-        /* 触控区域提示 */
-        .swipe-hint {
-            display: none;
+        .joystick-label {
             text-align: center;
-            color: #999;
-            font-size: 0.85em;
+            color: #666;
+            font-size: 0.9em;
             margin-top: 15px;
-            animation: pulse 2s infinite;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
+        .joystick-label .direction {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.2em;
         }
 
         @media (max-width: 600px) {
-            .mobile-controls {
-                display: grid;
+            .rotate-prompt {
+                display: flex;
             }
 
-            .swipe-hint {
-                display: block;
+            .game-layout {
+                display: none;
+            }
+        }
+
+        @media (min-width: 601px) and (max-width: 1200px) {
+            .game-layout {
+                flex-direction: column;
+            }
+
+            .joystick-section {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .joystick-container {
+                width: 180px;
+                height: 180px;
+            }
+
+            .joystick-base {
+                width: 180px;
+                height: 180px;
+            }
+
+            .joystick-stick {
+                width: 70px;
+                height: 70px;
             }
 
             #gameCanvas {
-                width: 100%;
-                max-width: 350px;
-                height: auto;
-                touch-action: none;
-            }
-
-            .container {
-                padding: 15px;
-                max-width: 100%;
-            }
-
-            h1 {
-                font-size: 1.4em;
-            }
-
-            .score-board {
-                gap: 15px;
-                flex-wrap: wrap;
-            }
-
-            .score-item {
-                padding: 8px 15px;
-                font-size: 0.95em;
-            }
-
-            .controls button {
-                padding: 10px 25px;
-                font-size: 0.9em;
-            }
-
-            .instructions {
-                font-size: 0.8em;
-                padding: 12px;
-            }
-
-            .achievements-display {
-                font-size: 0.8em;
-                padding: 8px 12px;
+                max-width: 400px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🐍 贪吃蛇小游戏 <small style="font-size: 0.4em; color: #999;">v2.0</small></h1>
+    <!-- 横屏提示 -->
+    <div class="rotate-prompt">
+        <div class="icon">📱</div>
+        <h2>请旋转设备</h2>
+        <p>游戏需要在横屏模式下游玩</p>
+        <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.8;">PC端请保持当前屏幕</p>
+    </div>
 
-        <div class="score-board">
-            <div class="score-item">当前分数: <span id="currentScore">0</span></div>
-            <div class="score-item">最高分数: <span id="highScore">0</span></div>
+    <!-- 游戏布局 -->
+    <div class="game-layout">
+        <!-- 游戏区域 -->
+        <div class="game-section">
+            <div class="container">
+                <h1>🐍 贪吃蛇 <small style="font-size: 0.4em; color: #999;">v2.1</small></h1>
+
+                <div class="score-board">
+                    <div class="score-item">当前分数: <span id="currentScore">0</span></div>
+                    <div class="score-item">最高分数: <span id="highScore">0</span></div>
+                </div>
+
+                <div class="achievements-display">
+                    <strong>🏆 成就: </strong>
+                    <span id="achievementsList">暂无</span>
+                </div>
+
+                <canvas id="gameCanvas" width="400" height="400" style="max-width: 100%; height: auto;"></canvas>
+
+                <div class="controls">
+                    <button class="btn-start" onclick="startGame()">开始游戏</button>
+                    <button class="btn-pause" onclick="togglePause()">暂停</button>
+                </div>
+
+                <div class="instructions">
+                    <p>🖥️ PC端：<strong>方向键</strong> 或 <strong>WASD</strong> 控制</p>
+                    <p>📱 移动端：使用<strong>虚拟摇杆</strong>控制</p>
+                </div>
+            </div>
         </div>
 
-        <div class="achievements-display">
-            <strong>🏆 成就: </strong>
-            <span id="achievementsList">暂无</span>
-        </div>
-
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
-
-        <div class="controls">
-            <button class="btn-start" onclick="startGame()">开始游戏</button>
-            <button class="btn-pause" onclick="togglePause()">暂停</button>
-        </div>
-
-        <div class="mobile-controls">
-            <button class="btn-up" onclick="changeDirection('up')">↑</button>
-            <button class="btn-left" onclick="changeDirection('left')">←</button>
-            <button class="btn-down" onclick="changeDirection('down')">↓</button>
-            <button class="btn-right" onclick="changeDirection('right')">→</button>
-        </div>
-
-        <div class="swipe-hint">
-            💡 提示：也可以在游戏区域滑动手指控制方向
-        </div>
-
-        <div class="instructions">
-            <h3>🎮 操作说明</h3>
-            <p>PC端：使用 <strong>方向键</strong> 或 <strong>WASD</strong> 控制</p>
-            <p>移动端：使用 <strong>方向按钮</strong> 或 <strong>滑动屏幕</strong> 控制</p>
-            <p>吃掉红色食物得分，避免撞墙和撞到自己</p>
+        <!-- 摇杆区域 -->
+        <div class="joystick-section">
+            <div class="container" style="height: 100%;">
+                <div class="joystick-label">
+                    <div style="margin-bottom: 10px;">🎮 虚拟摇杆</div>
+                    <div>方向: <span class="direction" id="joystickDirection">未操作</span></div>
+                </div>
+                <div class="joystick-container" id="joystickContainer">
+                    <div class="joystick-base">
+                        <div class="joystick-stick" id="joystickStick"></div>
+                        <div class="joystick-center"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -564,48 +642,11 @@
             // 绘制粒子
             drawParticles();
 
-            // 绘制蛇
-            snake.forEach((segment, index) => {
-                const gradient = ctx.createRadialGradient(
-                    segment.x * gridSize + gridSize / 2,
-                    segment.y * gridSize + gridSize / 2,
-                    0,
-                    segment.x * gridSize + gridSize / 2,
-                    segment.y * gridSize + gridSize / 2,
-                    gridSize / 2
-                );
-
-                // 无敌状态蛇会发光
-                if (isInvincible && index % 2 === Math.floor(Date.now() / 100) % 2) {
-                    gradient.addColorStop(0, '#f1c40f');
-                    gradient.addColorStop(1, '#f39c12');
-                } else {
-                    gradient.addColorStop(0, '#38ef7d');
-                    gradient.addColorStop(1, '#11998e');
-                }
-
-                ctx.fillStyle = gradient;
-                ctx.fillRect(
-                    segment.x * gridSize + 1,
-                    segment.y * gridSize + 1,
-                    gridSize - 2,
-                    gridSize - 2
-                );
-
-                // 蛇头眼睛
-                if (index === 0) {
-                    ctx.fillStyle = '#fff';
-                    ctx.beginPath();
-                    ctx.arc(segment.x * gridSize + 7, segment.y * gridSize + 7, 3, 0, Math.PI * 2);
-                    ctx.arc(segment.x * gridSize + 13, segment.y * gridSize + 7, 3, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            });
-
-            // 绘制食物（根据类型）
+            // 绘制食物（在蛇之前绘制，确保在蛇下面）
             const centerX = food.x * gridSize + gridSize / 2;
             const centerY = food.y * gridSize + gridSize / 2;
 
+            ctx.save();
             if (food.type === 'normal') {
                 // 普通食物 - 红色圆形
                 ctx.fillStyle = '#e74c3c';
@@ -651,6 +692,45 @@
                 ctx.fill();
                 ctx.shadowBlur = 0;
             }
+            ctx.restore();
+
+            // 绘制蛇
+            snake.forEach((segment, index) => {
+                const gradient = ctx.createRadialGradient(
+                    segment.x * gridSize + gridSize / 2,
+                    segment.y * gridSize + gridSize / 2,
+                    0,
+                    segment.x * gridSize + gridSize / 2,
+                    segment.y * gridSize + gridSize / 2,
+                    gridSize / 2
+                );
+
+                // 无敌状态蛇会发光
+                if (isInvincible && index % 2 === Math.floor(Date.now() / 100) % 2) {
+                    gradient.addColorStop(0, '#f1c40f');
+                    gradient.addColorStop(1, '#f39c12');
+                } else {
+                    gradient.addColorStop(0, '#38ef7d');
+                    gradient.addColorStop(1, '#11998e');
+                }
+
+                ctx.fillStyle = gradient;
+                ctx.fillRect(
+                    segment.x * gridSize + 1,
+                    segment.y * gridSize + 1,
+                    gridSize - 2,
+                    gridSize - 2
+                );
+
+                // 蛇头眼睛
+                if (index === 0) {
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(segment.x * gridSize + 7, segment.y * gridSize + 7, 3, 0, Math.PI * 2);
+                    ctx.arc(segment.x * gridSize + 13, segment.y * gridSize + 7, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
 
             // 绘制连击信息
             if (combo >= 2) {
@@ -940,52 +1020,108 @@
             }
         });
 
-        // 触控滑动控制
-        let touchStartX = 0;
-        let touchStartY = 0;
-        const minSwipeDistance = 30; // 最小滑动距离
+        // 虚拟摇杆控制
+        const joystickContainer = document.getElementById('joystickContainer');
+        const joystickStick = document.getElementById('joystickStick');
+        const joystickDirection = document.getElementById('joystickDirection');
 
-        canvas.addEventListener('touchstart', (e) => {
+        let joystickActive = false;
+        let joystickCenter = { x: 0, y: 0 };
+        let joystickMaxDistance = 60; // 摇杆最大移动距离
+
+        joystickContainer.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            const touch = e.touches[0];
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
+            const rect = joystickContainer.getBoundingClientRect();
+            joystickCenter = {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2
+            };
+            joystickActive = true;
+            updateJoystickPosition(e.touches[0]);
         }, { passive: false });
 
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // 防止滚动
+        joystickContainer.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (joystickActive) {
+                updateJoystickPosition(e.touches[0]);
+            }
         }, { passive: false });
 
-        canvas.addEventListener('touchend', (e) => {
+        joystickContainer.addEventListener('touchend', (e) => {
             e.preventDefault();
-            const touch = e.changedTouches[0];
-            const touchEndX = touch.clientX;
-            const touchEndY = touch.clientY;
+            joystickActive = false;
+            resetJoystick();
+        }, { passive: false });
 
-            const deltaX = touchEndX - touchStartX;
-            const deltaY = touchEndY - touchStartY;
+        // 鼠标支持（用于PC测试）
+        joystickContainer.addEventListener('mousedown', (e) => {
+            const rect = joystickContainer.getBoundingClientRect();
+            joystickCenter = {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2
+            };
+            joystickActive = true;
+            updateJoystickPosition(e);
+        });
 
-            // 判断滑动方向
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                // 水平滑动
-                if (Math.abs(deltaX) > minSwipeDistance) {
+        document.addEventListener('mousemove', (e) => {
+            if (joystickActive) {
+                updateJoystickPosition(e);
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (joystickActive) {
+                joystickActive = false;
+                resetJoystick();
+            }
+        });
+
+        function updateJoystickPosition(point) {
+            const deltaX = point.clientX - joystickCenter.x;
+            const deltaY = point.clientY - joystickCenter.y;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+            // 限制移动距离
+            const limitedDistance = Math.min(distance, joystickMaxDistance);
+            const angle = Math.atan2(deltaY, deltaX);
+
+            const limitedX = Math.cos(angle) * limitedDistance;
+            const limitedY = Math.sin(angle) * limitedDistance;
+
+            joystickStick.style.transform = `translate(calc(-50% + ${limitedX}px), calc(-50% + ${limitedY}px))`;
+
+            // 根据摇杆位置确定方向
+            if (distance > 20) { // 最小触发距离
+                const absX = Math.abs(deltaX);
+                const absY = Math.abs(deltaY);
+
+                if (absX > absY) {
+                    // 水平方向
                     if (deltaX > 0) {
+                        joystickDirection.textContent = '→';
                         changeDirection('right');
                     } else {
+                        joystickDirection.textContent = '←';
                         changeDirection('left');
                     }
-                }
-            } else {
-                // 垂直滑动
-                if (Math.abs(deltaY) > minSwipeDistance) {
+                } else {
+                    // 垂直方向
                     if (deltaY > 0) {
+                        joystickDirection.textContent = '↓';
                         changeDirection('down');
                     } else {
+                        joystickDirection.textContent = '↑';
                         changeDirection('up');
                     }
                 }
             }
-        }, { passive: false });
+        }
+
+        function resetJoystick() {
+            joystickStick.style.transform = 'translate(-50%, -50%)';
+            joystickDirection.textContent = '未操作';
+        }
 
         // 添加触控反馈（振动）
         function hapticFeedback() {
@@ -993,15 +1129,6 @@
                 navigator.vibrate(10);
             }
         }
-
-        // 覆盖 changeDirection 函数添加触控反馈
-        const originalChangeDirection = changeDirection;
-        changeDirection = function(dir) {
-            originalChangeDirection(dir);
-            if (isGameRunning && !isPaused) {
-                hapticFeedback();
-            }
-        };
 
         // 防止双击缩放
         document.addEventListener('dblclick', (e) => {
