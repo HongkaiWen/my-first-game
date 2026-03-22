@@ -253,7 +253,7 @@
         let score = 0;
         let highScore = localStorage.getItem('snakeHighScore') || 0;
         let gameLoop = null;
-        let gameSpeed = 100;
+        let gameSpeed = 200;
         let isPaused = false;
         let isGameRunning = false;
 
@@ -355,8 +355,8 @@
                 generateFood();
 
                 // 增加难度
-                if (score % 50 === 0 && gameSpeed > 50) {
-                    gameSpeed -= 10;
+                if (score % 50 === 0 && gameSpeed > 100) {
+                    gameSpeed -= 20;
                     clearInterval(gameLoop);
                     gameLoop = setInterval(gameUpdate, gameSpeed);
                 }
