@@ -18,75 +18,54 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
+            padding: 10px;
             margin: 0;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
-        /* 横屏提示 */
-        .rotate-prompt {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            color: white;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .rotate-prompt .icon {
-            font-size: 80px;
-            animation: rotate-phone 2s infinite;
-            margin-bottom: 20px;
-        }
-
-        @keyframes rotate-phone {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(90deg); }
-            50% { transform: rotate(90deg); }
-            75% { transform: rotate(0deg); }
-        }
-
-        /* 横屏布局 */
+        /* 游戏布局 - 竖屏但左右分栏 */
         .game-layout {
             display: flex;
-            gap: 20px;
+            flex-direction: column;
             align-items: center;
-            max-width: 1200px;
+            gap: 15px;
             width: 100%;
+            max-width: 800px;
         }
 
-        .game-section {
+        /* 移动端：左右分栏，像MOBA手游 */
+        .mobile-game-area {
+            display: none;
+            width: 100%;
+            gap: 15px;
+        }
+
+        .game-canvas-area {
             flex: 1;
-            min-width: 300px;
+            min-width: 0;
         }
 
-        .joystick-section {
-            width: 250px;
-            flex-shrink: 0;
+        .joystick-area {
+            flex: 0 0 auto;
+        }
+
+        /* PC端：传统布局 */
+        .pc-game-area {
+            width: 100%;
         }
 
         .container {
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             text-align: center;
-            height: 100%;
         }
 
         h1 {
             color: #333;
-            margin-bottom: 15px;
-            font-size: 1.5em;
+            margin-bottom: 10px;
+            font-size: 1.3em;
         }
 
         .score-board {
@@ -226,41 +205,41 @@
 
         /* 虚拟摇杆 */
         .joystick-container {
-            width: 200px;
-            height: 200px;
-            margin: 20px auto;
+            width: 140px;
+            height: 140px;
+            margin: 10px auto;
             position: relative;
         }
 
         .joystick-base {
-            width: 200px;
-            height: 200px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            width: 140px;
+            height: 140px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
             border-radius: 50%;
             position: relative;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5),
-                        inset 0 5px 15px rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4),
+                        inset 0 3px 10px rgba(255, 255, 255, 0.3);
         }
 
         .joystick-stick {
-            width: 80px;
-            height: 80px;
+            width: 60px;
+            height: 60px;
             background: linear-gradient(135deg, #fff, #f0f0f0);
             border-radius: 50%;
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3),
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3),
                         inset 0 2px 5px rgba(255, 255, 255, 0.5);
             cursor: pointer;
-            transition: box-shadow 0.2s;
+            transition: box-shadow 0.15s;
             -webkit-tap-highlight-color: transparent;
             touch-action: none;
         }
 
         .joystick-stick:active {
-            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.4),
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4),
                         inset 0 2px 5px rgba(255, 255, 255, 0.5);
         }
 
@@ -269,43 +248,20 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 4px;
-            height: 4px;
-            background: rgba(0, 0, 0, 0.2);
+            width: 3px;
+            height: 3px;
+            background: rgba(0, 0, 0, 0.15);
             border-radius: 50%;
         }
 
-        .joystick-label {
-            text-align: center;
-            color: #666;
-            font-size: 0.9em;
-            margin-top: 15px;
-        }
-
-        .joystick-label .direction {
-            font-weight: bold;
-            color: #667eea;
-            font-size: 1.2em;
-        }
-
-        @media (max-width: 600px) {
-            .rotate-prompt {
-                display: flex;
+        /* PC端 - 传统布局 */
+        @media (min-width: 601px) {
+            .pc-game-area {
+                display: block;
             }
 
-            .game-layout {
+            .mobile-game-area {
                 display: none;
-            }
-        }
-
-        @media (min-width: 601px) and (max-width: 1200px) {
-            .game-layout {
-                flex-direction: column;
-            }
-
-            .joystick-section {
-                width: 100%;
-                max-width: 300px;
             }
 
             .joystick-container {
@@ -327,23 +283,86 @@
                 max-width: 400px;
             }
         }
+
+        /* 移动端 - MOBA风格左右分栏 */
+        @media (max-width: 600px) {
+            .pc-game-area {
+                display: none;
+            }
+
+            .mobile-game-area {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: flex-start;
+            }
+
+            .game-canvas-area {
+                flex: 1;
+            }
+
+            .joystick-area {
+                flex: 0 0 auto;
+            }
+
+            h1 {
+                font-size: 1.1em;
+                margin-bottom: 8px;
+            }
+
+            .score-board {
+                gap: 10px;
+                flex-wrap: wrap;
+                margin-bottom: 10px;
+            }
+
+            .score-item {
+                padding: 6px 12px;
+                font-size: 0.85em;
+            }
+
+            .achievements-display {
+                font-size: 0.75em;
+                padding: 6px 10px;
+                margin-bottom: 8px;
+            }
+
+            #gameCanvas {
+                width: 100%;
+                max-width: 100%;
+                height: auto;
+                touch-action: none;
+            }
+
+            .controls button {
+                padding: 8px 20px;
+                font-size: 0.85em;
+                margin: 2px;
+            }
+
+            .instructions {
+                display: none;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            /* 摇杆区域固定在右侧 */
+            .joystick-section {
+                position: sticky;
+                top: 10px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- 横屏提示 -->
-    <div class="rotate-prompt">
-        <div class="icon">📱</div>
-        <h2>请旋转设备</h2>
-        <p>游戏需要在横屏模式下游玩</p>
-        <p style="font-size: 0.9em; margin-top: 10px; opacity: 0.8;">PC端请保持当前屏幕</p>
-    </div>
-
     <!-- 游戏布局 -->
     <div class="game-layout">
-        <!-- 游戏区域 -->
-        <div class="game-section">
+        <!-- PC端布局 -->
+        <div class="pc-game-area">
             <div class="container">
-                <h1>🐍 贪吃蛇 <small style="font-size: 0.4em; color: #999;">v2.1</small></h1>
+                <h1>🐍 贪吃蛇 <small style="font-size: 0.4em; color: #999;">v2.2</small></h1>
 
                 <div class="score-board">
                     <div class="score-item">当前分数: <span id="currentScore">0</span></div>
@@ -355,7 +374,7 @@
                     <span id="achievementsList">暂无</span>
                 </div>
 
-                <canvas id="gameCanvas" width="400" height="400" style="max-width: 100%; height: auto;"></canvas>
+                <canvas id="gameCanvas" width="400" height="400"></canvas>
 
                 <div class="controls">
                     <button class="btn-start" onclick="startGame()">开始游戏</button>
@@ -363,19 +382,34 @@
                 </div>
 
                 <div class="instructions">
-                    <p>🖥️ PC端：<strong>方向键</strong> 或 <strong>WASD</strong> 控制</p>
-                    <p>📱 移动端：使用<strong>虚拟摇杆</strong>控制</p>
+                    <p>🖥️ 使用 <strong>方向键</strong> 或 <strong>WASD</strong> 控制</p>
                 </div>
             </div>
         </div>
 
-        <!-- 摇杆区域 -->
-        <div class="joystick-section">
-            <div class="container" style="height: 100%;">
-                <div class="joystick-label">
-                    <div style="margin-bottom: 10px;">🎮 虚拟摇杆</div>
-                    <div>方向: <span class="direction" id="joystickDirection">未操作</span></div>
+        <!-- 移动端布局 - MOBA风格 -->
+        <div class="mobile-game-area">
+            <!-- 左侧：游戏区域 -->
+            <div class="game-canvas-area">
+                <div class="container">
+                    <h1>🐍 <small style="font-size: 0.5em; color: #999;">v2.2</small></h1>
+
+                    <div class="score-board">
+                        <div class="score-item">分数: <span id="currentScoreMobile">0</span></div>
+                        <div class="score-item">最高: <span id="highScoreMobile">0</span></div>
+                    </div>
+
+                    <canvas id="gameCanvasMobile" width="400" height="400"></canvas>
+
+                    <div class="controls">
+                        <button class="btn-start" onclick="startGame()">开始</button>
+                        <button class="btn-pause" onclick="togglePause()">暂停</button>
+                    </div>
                 </div>
+            </div>
+
+            <!-- 右侧：摇杆区域 -->
+            <div class="joystick-area">
                 <div class="joystick-container" id="joystickContainer">
                     <div class="joystick-base">
                         <div class="joystick-stick" id="joystickStick"></div>
@@ -395,11 +429,21 @@
     </div>
 
     <script>
-        // 游戏配置
-        const canvas = document.getElementById('gameCanvas');
+        // 游戏配置 - 根据屏幕尺寸选择画布
+        const isMobile = window.innerWidth <= 600;
+        const canvasId = isMobile ? 'gameCanvasMobile' : 'gameCanvas';
+        const canvas = document.getElementById(canvasId);
         const ctx = canvas.getContext('2d');
         const gridSize = 20;
         const tileCount = canvas.width / gridSize;
+
+        // 分数显示元素
+        const currentScoreElement = isMobile
+            ? document.getElementById('currentScoreMobile')
+            : document.getElementById('currentScore');
+        const highScoreElement = isMobile
+            ? document.getElementById('highScoreMobile')
+            : document.getElementById('highScore');
 
         // 游戏状态
         let snake = [{x: 10, y: 10}];
@@ -424,7 +468,7 @@
         let lastEatTime = 0;
 
         // 更新最高分数显示
-        document.getElementById('highScore').textContent = highScore;
+        highScoreElement.textContent = highScore;
 
         // 显示已解锁成就
         function displayAchievements() {
@@ -860,7 +904,7 @@
                 }
 
                 score += Math.floor(points);
-                document.getElementById('currentScore').textContent = score;
+                currentScoreElement.textContent = score;
 
                 // 创建粒子效果
                 createParticles(food.x, food.y, particleColor);
@@ -927,7 +971,7 @@
             if (invincibleTimer) clearTimeout(invincibleTimer);
             if (comboTimer) clearTimeout(comboTimer);
 
-            document.getElementById('currentScore').textContent = score;
+            currentScoreElement.textContent = score;
             generateFood();
 
             if (gameLoop) clearInterval(gameLoop);
@@ -949,7 +993,7 @@
             if (score > highScore) {
                 highScore = score;
                 localStorage.setItem('snakeHighScore', highScore);
-                document.getElementById('highScore').textContent = highScore;
+                highScoreElement.textContent = highScore;
                 checkAchievement('newHighScore', '刷新最高分', () => true);
             }
 
@@ -1023,11 +1067,10 @@
         // 虚拟摇杆控制
         const joystickContainer = document.getElementById('joystickContainer');
         const joystickStick = document.getElementById('joystickStick');
-        const joystickDirection = document.getElementById('joystickDirection');
 
         let joystickActive = false;
         let joystickCenter = { x: 0, y: 0 };
-        let joystickMaxDistance = 60; // 摇杆最大移动距离
+        let joystickMaxDistance = 40; // 摇杆最大移动距离
 
         joystickContainer.addEventListener('touchstart', (e) => {
             e.preventDefault();
@@ -1092,26 +1135,22 @@
             joystickStick.style.transform = `translate(calc(-50% + ${limitedX}px), calc(-50% + ${limitedY}px))`;
 
             // 根据摇杆位置确定方向
-            if (distance > 20) { // 最小触发距离
+            if (distance > 15) { // 最小触发距离
                 const absX = Math.abs(deltaX);
                 const absY = Math.abs(deltaY);
 
                 if (absX > absY) {
                     // 水平方向
                     if (deltaX > 0) {
-                        joystickDirection.textContent = '→';
                         changeDirection('right');
                     } else {
-                        joystickDirection.textContent = '←';
                         changeDirection('left');
                     }
                 } else {
                     // 垂直方向
                     if (deltaY > 0) {
-                        joystickDirection.textContent = '↓';
                         changeDirection('down');
                     } else {
-                        joystickDirection.textContent = '↑';
                         changeDirection('up');
                     }
                 }
@@ -1120,7 +1159,6 @@
 
         function resetJoystick() {
             joystickStick.style.transform = 'translate(-50%, -50%)';
-            joystickDirection.textContent = '未操作';
         }
 
         // 添加触控反馈（振动）
